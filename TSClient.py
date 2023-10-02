@@ -7,29 +7,42 @@ port = 18442
 if len(sys.argv) >= 2:
     host = sys.argv[1]
 
-soc = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+numIter = 10
 
-try:
-    soc.connect((host, port))
-except:
-    print('no connection')
+offsetArray = []
+rttArray = []
 
-time1 = int(time.time()*1000)
-soc.sendall("Sync".encode('utf8'))
+for i in range(numIter):
+    soc = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
-serverResponse = soc.recv(100).decode('utf8').rstrip()
-time4 = int(time.time()*1000)
+    try:
+        soc.connect((host, port))
+    except:
+        print('no connection')
 
-serverTime2, serverTime3 = serverResponse.split(',')
-serverTime2 = int(serverTime2)
-serverTime3 = int(serverTime3)
+    time1 = int(time.time()*1000)
+    soc.sendall("Sync".encode('utf8'))
 
-diff = (serverTime2 - time1) + (serverTime3 - time4)
-diff /= 2
+    serverResponse = soc.recv(100).decode('utf8').rstrip()
+    time4 = int(time.time()*1000)
 
-syncedTime = time4 + diff
+    serverTime2, serverTime3 = serverResponse.split(',')
+    serverTime2 = int(serverTime2)
+    serverTime3 = int(serverTime3)
 
-rtt = (time4 - time1) + (serverTime3 - serverTime2)
+    diff = (serverTime2 - time1) + (serverTime3 - time4)
+    diff /= 2
+
+    rtt = (time4 - time1) + (serverTime3 - serverTime2)
+    rttArray.append(rtt)
+    offsetArray.append(diff)
+
+offset = sum(offsetArray)/len(offsetArray)
+rtt = sum(rttArray)/len(rttArray)
+
+curTime = int(time.time() * 1000)
+syncedTime = curTime - offset
+
 print('REMOTE_TIME ' + str(int(syncedTime)))
-print('LOCAL_TIME ' + str(int(time4)))
+print('LOCAL_TIME ' + str(int(curTime)))
 print('RTT_ESTIMATE ' + str(int(rtt)))

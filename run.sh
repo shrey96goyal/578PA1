@@ -1,2 +1,1 @@
-python TSClient.py &
-python TSClient.py
+python TSClient.py 3.148.112.204 & python TSClient.py 3.148.112.204
